@@ -8,7 +8,7 @@ set(LLVM_LINK_COMPONENTS
   )
 
 add_llvm_tool(llvm-block
-  llvm-fixblock.cpp
+  llvm-block.cpp
   table.cpp
 
 
