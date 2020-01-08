@@ -18,7 +18,7 @@ class inst {
         }
         inst(int i, std::string label, std::string f) 
         : idx(i), head(label), func(f) {}
-      //  ~inst();
+
     private:
         int idx;
         std::string head;
@@ -45,7 +45,7 @@ class col {
         std::list<std::vector<inst>::iterator> searchidx(int n); //n is idx in rightIR block
         col(int n)
         : colnum(n){}
-     //   ~col();
+
     private:
         std::vector<inst> insts;
         int colnum;
@@ -55,7 +55,7 @@ class col {
 
 class collist {
     public:
-        void push(col *c); // cols에 col pointer push. 중복된건 안넣어야함
+        void push(col *c);
         col* searchcol(int colnum);
         int printcols(){
             std::list<col*>::iterator it = cols.begin();
@@ -67,7 +67,7 @@ class collist {
             return 0;
         }
         collist() {}
-      //  ~collist();
+ 
     private:
         std::list<col*> cols;
 };
