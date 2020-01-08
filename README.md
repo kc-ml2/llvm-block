@@ -13,7 +13,7 @@ Since llvm-block draws on debug info, input modules should be generated with -g 
     cd llvm-block && mkdir build && cd build
     cmake .. -DLLVM_ROOT=<path to llvm source root>
     make llvm-block
-    ./llvm-fixblock/llvm-fixblock <before> <after>
+    ./llvm-block/llvm-block <before> <after>
     
 ### Quick Commands
     clang -O0 -g -Xclang -disable-O0-optnone -emit-llvm -S *.c
