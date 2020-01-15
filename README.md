@@ -5,8 +5,8 @@ Since llvm-block draws on debug info, input modules should be generated with -g 
 ### Prerequisites
 * cmake
 * make
-* LLVM
-* clang
+* LLVM 10
+* clang 
 
 ### Build
     git clone https://github.com/kc-ml2/llvm-block.git
