@@ -7,6 +7,12 @@ Since llvm-block draws on debug info, input modules should be generated with -g 
 * make
 * LLVM 10
   * [LLVM Debian/Ubuntu nightly packages](https://apt.llvm.org/)
+    * Automatic installation script
+```    
+wget https://apt.llvm.org/llvm.sh
+chmod +x llvm.sh
+sudo ./llvm.sh <version number>
+```
 * clang 10
 
 ### Build
