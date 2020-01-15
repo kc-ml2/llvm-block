@@ -6,6 +6,7 @@ Since llvm-block draws on debug info, input modules should be generated with -g 
 * cmake
 * make
 * LLVM 10
+  * [LLVM Debian/Ubuntu nightly packages](https://apt.llvm.org/)
 * clang 10
 
 ### Build
