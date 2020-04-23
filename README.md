@@ -25,7 +25,7 @@ sudo ./llvm.sh <version number>
 ### Quick Commands
     clang -O0 -g -Xclang -disable-O0-optnone -emit-llvm -S *.c
     llvm-link *.ll -S -o beforeg.ll
-    opt -S <transform pass> -o afterg.ll
+    opt beforeg.ll -S <transform pass> -o afterg.ll
 
     <path to llvm-block>/llvm-block beforeg.ll afterg.ll 2> output
 

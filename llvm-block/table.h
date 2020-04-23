@@ -23,7 +23,6 @@ class inst {
         int idx;
         std::string head;
         std::string func;
-      ;
 };
 
 class col {

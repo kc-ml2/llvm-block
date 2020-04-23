@@ -43,61 +43,62 @@ static std::string getSimpleNodeLabel(const BasicBlock *Node) {
  
      Node->printAsOperand(OS, false);
      return OS.str();
-   }
+}
 
-std::list<std::vector<inst>::iterator>::iterator findstring(
+std::list<std::vector<inst>::iterator>::iterator findString(
             std::list<std::vector<inst>::iterator>::iterator first,
             std::list<std::vector<inst>::iterator>::iterator last,
             std::string s){
-    while (first!=last) {
-      if ((**first).gethead()==s) return first;
-      ++first;
-    }
-    return last;
+  while (first!=last) {
+    if ((**first).gethead()==s) return first;
+    ++first;
   }
+  return last;
+}
 
 std::list<std::vector<inst>::iterator> intersection(
         std::list<std::vector<inst>::iterator> a,
         std::list<std::vector<inst>::iterator> b ) {
-    std::string s1,s2;
-    int n1,n2;
-    char c('%');
-    std::list<std::vector<inst>::iterator> o;
-    std::list<std::vector<inst>::iterator>::iterator first1 = a.begin(),
-                                                     first2 = b.begin(),
-    last1=a.end(), last2=b.end();
-    while (first1 != last1 && first2 != last2) {
-      s1 = (**first1).gethead();
-      s2 = (**first2).gethead();
-      if(s1.at(0)!=c) {
-        if (findstring(first2,last2,s1)!=last2) o.push_back(*first1);
-        first1++;
-        continue;
-      }
-
-      else if(s2.at(0)!=c) {
-        if (findstring(first1,last1,s2)!=last1) o.push_back(*first2);
-        first2++;
-        continue;
-      }
-
-      if (s1 < s2) ++first1;
-        else  {
-          if (!(s2 < s1)) o.push_back(*first1++);
-          ++first2;
-      } 
+  std::string s1,s2;
+  int n1,n2;
+  char c('%');
+  std::list<std::vector<inst>::iterator> o;
+  std::list<std::vector<inst>::iterator>::iterator first1 = a.begin(),
+                                                   first2 = b.begin(),
+                                                   last1=a.end(),
+                                                   last2=b.end();
+  while (first1 != last1 && first2 != last2) {
+    s1 = (**first1).gethead();
+    s2 = (**first2).gethead();
+    if(s1.at(0)!=c) {
+      if (findString(first2,last2,s1)!=last2) o.push_back(*first1);
+      first1++;
+      continue;
     }
-    return o;
+    
+    else if(s2.at(0)!=c) {
+      if (findString(first1,last1,s2)!=last1) o.push_back(*first2);
+      first2++;
+      continue;
+    }
+    
+    if (s1 < s2) ++first1;
+    else  {
+      if (!(s2 < s1)) o.push_back(*first1++);
+      ++first2;
+    } 
   }
+  return o;
+}
 
 std::vector<collist*> CreateTable(std::string inputfile) {
   int n,m,colnum;
   char c('!');
   std::string line, word;
   std::ifstream input(inputfile);
-  //  ofstream output(argv[2]);
-  std::vector<collist*> table;
 
+  std::vector<collist*> table;
+  table.reserve(1024);
   while(getline(input, line)) { 
     std::stringstream iss(line);
     iss >> word;
@@ -109,15 +110,13 @@ std::vector<collist*> CreateTable(std::string inputfile) {
     n = atoi(word.substr(0,word.size()-1).c_str()); //linenum
     iss >> word >> word; //colnum,
     colnum = atoi(word.substr(0,word.size()-1).c_str()); //colnum
-
+    
     if(table.size() <= n) {
       table.resize(n+1);
       table.at(n) = new collist();
       }
     else if(table.at(n) == NULL) table.at(n) = new collist();
     table.at(n) -> push(new col(colnum));
-   
-    
   }
   return table;
 }
