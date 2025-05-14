@@ -1,19 +1,18 @@
 cmake_minimum_required(VERSION 3.4.3)
 
+find_package(LLVM REQUIRED CONFIG)
+include_directories(${LLVM_INCLUDE_DIRS})
+add_definitions(${LLVM_DEFINITIONS})
 
-set(LLVM_LINK_COMPONENTS
+add_executable(llvm-block
+  llvm-block.cpp
+  table.cpp
+)
+
+llvm_map_components_to_libnames(llvm_libs
   Core
   IRReader
   Support
-  )
+)
 
-add_llvm_tool(llvm-block
-  llvm-block.cpp
-  table.cpp
-
-
-  DEPENDS
-  intrinsics_gen
-  )
-
-export_executable_symbols(llvm-block)
+target_link_libraries(llvm-block ${llvm_libs})
