@@ -21,7 +21,7 @@ sudo ./llvm.sh <version number>
     cmake .. -DLLVM_ROOT=<path to llvm source root>
     make llvm-block
     ./llvm-block/llvm-block <before> <after>
-    
+
 ### Quick Commands
     clang -O0 -g -Xclang -disable-O0-optnone -emit-llvm -S *.c
     llvm-link *.ll -S -o beforeg.ll
@@ -37,3 +37,10 @@ sudo ./llvm.sh <version number>
     mv .*.dot before
     opt -dot-cfg after.ll
     mv .*.dot after
+
+### Short script
+If you are too bothered to run the commands above, simply run `run-llvm-block.sh` with the following instructions.
+
+1. First add a `*.c` file to any directory, say you have `foo/a.c`.
+
+2. Then simply run `bash run-llvm-block.sh foo` (checkout the code for more options if you are on MacOS).
