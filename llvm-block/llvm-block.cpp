@@ -1,5 +1,7 @@
 #include <string>
 #include <vector>
+#include <list>
+#include <unordered_map>
 #include <fstream>
 #include <sstream>
 #include <algorithm>
@@ -16,6 +18,7 @@
 #include "table.h"
 
 using namespace llvm;
+using TableMap = std::unordered_map<int, collist*>;
 
 static std::unique_ptr<Module> readModule(LLVMContext &Context,
                                           StringRef Name) {
@@ -91,52 +94,57 @@ std::list<std::vector<inst>::iterator> intersection(
   return o;
 }
 
-std::vector<collist*> CreateTable(std::string inputfile) {
-  int n,m,colnum;
+TableMap CreateTable(std::string inputfile) {
   char c('!');
   std::string line, word;
   std::ifstream input(inputfile);
 
-  std::vector<collist*> table;
-  table.reserve(1024);
+  TableMap table;
+
   while(getline(input, line)) { 
     std::stringstream iss(line);
     iss >> word;
-    if (word.at(0) != c) continue;
+    if (word.empty() || word.at(0) != c) continue;
     //first char: !
     iss >> word >> word;
     if ( word != "!DILocation(line:" ) continue;
     iss >> word; //linenum,
-    n = atoi(word.substr(0,word.size()-1).c_str()); //linenum
+    int n = atoi(word.substr(0,word.size()-1).c_str()); //linenum
     iss >> word >> word; //colnum,
-    colnum = atoi(word.substr(0,word.size()-1).c_str()); //colnum
+    int colnum = atoi(word.substr(0,word.size()-1).c_str()); //colnum
     
-    if(table.size() <= n) {
-      table.resize(n+1);
-      table.at(n) = new collist();
-      }
-    else if(table.at(n) == NULL) table.at(n) = new collist();
-    table.at(n) -> push(new col(colnum));
+    // generate new collist if key does not exist in the map
+    if(table.find(n) == table.end()) {
+      table[n] = new collist();
+    }
+    table[n] -> push(new col(colnum));
   }
   return table;
 }
 
-std::vector<collist*> InsertTable(std::vector<collist*> table
-                                  , Module &M) {
-  int i;
+TableMap InsertTable(TableMap table, Module &M) {
+  col* c;
   DebugLoc DL;
   std::string label,func;
   for( auto &F : M) {
     func = F.getName().str();
     for ( auto &BB : F){
       label = getSimpleNodeLabel(&BB);
-      i=0;
+      int i=0;
       for ( auto &I : BB) {
         i++;
         DL = I.getDebugLoc();
-        inst objinst(i,label,func);
-        if(!DL) break;
-        table.at(DL.getLine())->searchcol(DL.getCol())->push(objinst); 
+        if (!DL) break;
+
+        int line = DL.getLine();
+        int col = DL.getCol();
+        auto it = table.find(line);
+        if (it == table.end()) continue;
+
+        c = it->second->searchcol(col);
+        if (!c) continue;
+
+        c->push(inst(i, label, func));
       }
     }
   }
@@ -145,44 +153,41 @@ std::vector<collist*> InsertTable(std::vector<collist*> table
 }
 
 
-void CompareLR(std::vector<collist*> table, Module &M){
-  std::string label1, label2,func;
-  DebugLoc DL;
-  int f=0, i;
+void CompareLR(TableMap table, Module &M){
   col* objcol;
-  std::vector<inst>::iterator it;
+  DebugLoc DL;
+  int f = 0;
   for( auto &F: M){
-    f++;
-    func = F.getName().str();
-    errs() << "Function "<< f << ": " << func << "\n";
+    errs() << "Function "<< ++f << ": " << F.getName() << "\n";
     std::list<std::string> heads;
 
     for( auto &BB : F){
-      i=0;
+      int i=0;
       std::list<std::vector<inst>::iterator> itsa, itsb, o;
       for( auto &I :BB){
         DL = I.getDebugLoc();
         if(!DL || DL.getLine()==0) break;
-        objcol = table.at(DL.getLine())->searchcol(DL.getCol());
+        int line = DL.getLine(), col = DL.getCol();
+        auto it_map = table.find(line);
+        if (it_map == table.end()) continue;
+        objcol = it_map->second->searchcol(col);
+        if (!objcol) continue;
         itsa = objcol->searchidx(++i);
         if (itsa.empty()) continue;  
-        if (!itsb.empty()) o = intersection(itsa,itsb);
-        else o = itsa;
+        o = itsb.empty() ? itsa : intersection(itsa, itsb);
         itsb = o;
         if (o.empty()) continue;
         if (I.isTerminator() ) {
-          it = o.front();
+          auto it = o.front();
           while( !o.empty() &&
           heads.end()!=std::find(heads.begin(), heads.end(), (*it).gethead())) {
             o.pop_front();
-            it = o.front();
+            if (!o.empty()) it = o.front();
           }
           if(o.empty()) continue;
-          label1 = (*it).gethead();
-          label2 = getSimpleNodeLabel(&BB);
-          if ((*it).getfunc() != func) continue;
-          errs() << label1 << " " << label2 << "\n";
-          heads.push_back(label1);
+          if ((*it).getfunc() != F.getName()) continue;
+          errs() << (*it).gethead() << " " << getSimpleNodeLabel(&BB) << "\n";
+          heads.push_back((*it).gethead());
         }
       }
     }
@@ -197,10 +202,10 @@ int main(int argc, char **argv) {
   LLVMContext Context;
 
   // Load both modules.  Die if that fails.
-  std::unique_ptr<Module> LModule = readModule(Context, LeftFilename);
-  std::unique_ptr<Module> RModule = readModule(Context, RightFilename);
+  auto LModule = readModule(Context, LeftFilename);
+  auto RModule = readModule(Context, RightFilename);
 
-  std::vector<collist*> table = CreateTable(LeftFilename);
+  TableMap table = CreateTable(LeftFilename);
   table = InsertTable(table, *LModule);
   CompareLR(table, *RModule);
   return 0;

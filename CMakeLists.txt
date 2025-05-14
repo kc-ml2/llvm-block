@@ -1,9 +1,11 @@
-cmake_minimum_required(VERSION 3.4.3)
+cmake_minimum_required(VERSION 3.13)
+project(llvm-block)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(LLVM_ROOT "" CACHE PATH "Root of LLVM install.")
 
-list(APPEND CMAKE_PREFIX_PATH
-     "${LLVM_ROOT}/lib/cmake")
+list(APPEND CMAKE_PREFIX_PATH "${LLVM_ROOT}/lib/cmake")
 find_package(LLVM REQUIRED CONFIG)
 
 list(APPEND CMAKE_MODULE_PATH "${LLVM_CMAKE_DIR}")
