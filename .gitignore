@@ -2,3 +2,5 @@
 .envrc
 build/
 sandbox/
+
+CMakeUserPresets.json
