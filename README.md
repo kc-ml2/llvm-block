@@ -3,24 +3,20 @@ llvm-block catches identical basic blocks between two modules.
 Since llvm-block draws on debug info, input modules should be generated with -g option.  
 
 ### Prerequisites
-* cmake
-* make
-* LLVM 10
-  * [LLVM Debian/Ubuntu nightly packages](https://apt.llvm.org/)
-    * Automatic installation script
-```    
-wget https://apt.llvm.org/llvm.sh
-chmod +x llvm.sh
-sudo ./llvm.sh <version number>
 ```
-* clang 10
+cmake >= 3.25 
+llvm >= 14
+```
 
 ### Build
-    git clone https://github.com/kc-ml2/llvm-block.git
-    cd llvm-block && mkdir build && cd build
-    cmake .. -DLLVM_ROOT=<path to llvm source root>
-    make llvm-block
-    ./llvm-block/llvm-block <before> <after>
+```bash
+git clone https://github.com/kc-ml2/llvm-block.git
+cd llvm-block
+export LLVM_ROOT=<path to llvm source root>
+cmake --preset=default && cmake --build build 
+./llvm-block/llvm-block <before> <after>
+```
+*If would like to build in a MacOS environment, run with the `macos` preset instead (`cmake --preset=macos && cmake --build build`)
 
 ### Quick Commands
     clang -O0 -g -Xclang -disable-O0-optnone -emit-llvm -S *.c
@@ -38,7 +34,7 @@ sudo ./llvm.sh <version number>
     opt -dot-cfg after.ll
     mv .*.dot after
 
-### Short script
+### TLDR script
 If you are too bothered to run the commands above, simply run `run-llvm-block.sh` with the following instructions.
 
 1. First add a `*.c` file to any directory, say you have `foo/a.c`.

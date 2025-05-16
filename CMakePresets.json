@@ -1,0 +1,44 @@
+{
+  "version": 10,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 25,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+        "name":  "default",
+        "displayName": "Default",
+        "generator": "Ninja",
+        "cacheVariables": {
+            "CMAKE_C_COMPILER": "$env{LLVM_ROOT}/bin/clang",
+            "CMAKE_CXX_COMPILER": "$env{LLVM_ROOT}/bin/clang++",
+            "LLVM_ROOT": "$env{LLVM_ROOT}"
+        },
+        "binaryDir": "${sourceDir}/build"
+    },
+    {
+        "name": "macos",
+        "displayName": "MacOS",
+        "generator": "Ninja",
+        "cacheVariables": {
+            "CMAKE_C_COMPILER": "$env{LLVM_ROOT}/bin/clang",
+            "CMAKE_CXX_COMPILER": "$env{LLVM_ROOT}/bin/clang++",
+            "LLVM_ROOT": "$env{LLVM_ROOT}",
+            "CMAKE_OSX_SYSROOT": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
+        },
+        "binaryDir": "${sourceDir}/build"
+    }
+
+  ],
+  "buildPresets": [
+    {
+        "name": "default",
+        "configurePreset": "default"
+    },
+    {
+        "name": "macos",
+        "configurePreset": "macos"
+    }
+  ]
+}
