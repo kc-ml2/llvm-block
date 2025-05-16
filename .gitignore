@@ -4,3 +4,6 @@ build/
 sandbox/
 
 CMakeUserPresets.json
+test.sh
+test/
+error_logs/
