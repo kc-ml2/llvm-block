@@ -117,6 +117,7 @@ void CompareLR(Table &table, Module &M){
   int f=0, i;
   std::vector<inst>::iterator it;
   for( auto &F: M){
+    if (F.isDeclaration()) continue;
     f++;
     func = F.getName().str();
     errs() << "Function "<< f << ": " << func << "\n";
