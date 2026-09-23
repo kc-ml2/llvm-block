@@ -16,3 +16,13 @@ llvm_map_components_to_libnames(llvm_libs
 )
 
 target_link_libraries(llvm-block ${llvm_libs})
+
+if(BUILD_TESTING)
+  add_test(
+    NAME missing-debug-column
+    COMMAND llvm-block
+            ${CMAKE_CURRENT_SOURCE_DIR}/../tests/left.ll
+            ${CMAKE_CURRENT_SOURCE_DIR}/../tests/right.ll
+  )
+  set_tests_properties(missing-debug-column PROPERTIES TIMEOUT 5)
+endif()

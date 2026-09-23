@@ -1,8 +1,9 @@
-#include <string>
-#include <vector>
-#include <fstream>
-#include <sstream>
 #include <algorithm>
+#include <list>
+#include <map>
+#include <string>
+#include <utility>
+#include <vector>
 #include "llvm/Support/CommandLine.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/DebugLoc.h"
@@ -16,6 +17,8 @@
 #include "table.h"
 
 using namespace llvm;
+using Location = std::pair<unsigned, unsigned>;
+using Table = std::map<Location, col>;
 
 static std::unique_ptr<Module> readModule(LLVMContext &Context,
                                           StringRef Name) {
@@ -91,67 +94,30 @@ std::list<std::vector<inst>::iterator> intersection(
   return o;
 }
 
-std::vector<collist*> CreateTable(std::string inputfile) {
-  int n,m,colnum;
-  char c('!');
-  std::string line, word;
-  std::ifstream input(inputfile);
-
-  std::vector<collist*> table;
-  table.reserve(1024);
-  while(getline(input, line)) { 
-    std::stringstream iss(line);
-    iss >> word;
-    if (word.at(0) != c) continue;
-    //first char: !
-    iss >> word >> word;
-    if ( word != "!DILocation(line:" ) continue;
-    iss >> word; //linenum,
-    n = atoi(word.substr(0,word.size()-1).c_str()); //linenum
-    iss >> word >> word; //colnum,
-    colnum = atoi(word.substr(0,word.size()-1).c_str()); //colnum
-    
-    if(table.size() <= n) {
-      table.resize(n+1);
-      table.at(n) = new collist();
-      }
-    else if(table.at(n) == NULL) table.at(n) = new collist();
-    table.at(n) -> push(new col(colnum));
-  }
-  return table;
-}
-
-std::vector<collist*> InsertTable(std::vector<collist*> table
-                                  , Module &M) {
-  int i;
-  DebugLoc DL;
-  std::string label,func;
+Table CreateTable(Module &M) {
+  Table table;
   for( auto &F : M) {
-    func = F.getName().str();
     for ( auto &BB : F){
-      label = getSimpleNodeLabel(&BB);
-      i=0;
+      int i=0;
       for ( auto &I : BB) {
-        i++;
-        DL = I.getDebugLoc();
-        inst objinst(i,label,func);
-        if(!DL) break;
-        table.at(DL.getLine())->searchcol(DL.getCol())->push(objinst); 
+        ++i;
+        DebugLoc DL = I.getDebugLoc();
+        if(!DL) continue;
+        table[{DL.getLine(), DL.getCol()}].push(
+            inst(i, getSimpleNodeLabel(&BB), F.getName().str()));
       }
     }
   }
-
   return table;
 }
 
-
-void CompareLR(std::vector<collist*> table, Module &M){
+void CompareLR(Table &table, Module &M){
   std::string label1, label2,func;
   DebugLoc DL;
   int f=0, i;
-  col* objcol;
   std::vector<inst>::iterator it;
   for( auto &F: M){
+    if (F.isDeclaration()) continue;
     f++;
     func = F.getName().str();
     errs() << "Function "<< f << ": " << func << "\n";
@@ -161,23 +127,24 @@ void CompareLR(std::vector<collist*> table, Module &M){
       i=0;
       std::list<std::vector<inst>::iterator> itsa, itsb, o;
       for( auto &I :BB){
+        ++i;
         DL = I.getDebugLoc();
-        if(!DL || DL.getLine()==0) break;
-        objcol = table.at(DL.getLine())->searchcol(DL.getCol());
-        itsa = objcol->searchidx(++i);
+        if(!DL || DL.getLine()==0) continue;
+        auto location = table.find({DL.getLine(), DL.getCol()});
+        if (location == table.end()) continue;
+        itsa = location->second.searchidx(i);
         if (itsa.empty()) continue;  
         if (!itsb.empty()) o = intersection(itsa,itsb);
         else o = itsa;
         itsb = o;
         if (o.empty()) continue;
         if (I.isTerminator() ) {
-          it = o.front();
-          while( !o.empty() &&
-          heads.end()!=std::find(heads.begin(), heads.end(), (*it).gethead())) {
+          while (!o.empty() && heads.end() != std::find(
+              heads.begin(), heads.end(), o.front()->gethead())) {
             o.pop_front();
-            it = o.front();
           }
           if(o.empty()) continue;
+          it = o.front();
           label1 = (*it).gethead();
           label2 = getSimpleNodeLabel(&BB);
           if ((*it).getfunc() != func) continue;
@@ -199,9 +166,10 @@ int main(int argc, char **argv) {
   // Load both modules.  Die if that fails.
   std::unique_ptr<Module> LModule = readModule(Context, LeftFilename);
   std::unique_ptr<Module> RModule = readModule(Context, RightFilename);
+  if (!LModule || !RModule)
+    return 1;
 
-  std::vector<collist*> table = CreateTable(LeftFilename);
-  table = InsertTable(table, *LModule);
+  Table table = CreateTable(*LModule);
   CompareLR(table, *RModule);
   return 0;
 }
